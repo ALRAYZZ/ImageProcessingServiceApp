@@ -1,3 +1,4 @@
+using Amazon.S3;
 using ImageProcessingService.DataAccess;
 using ImageProcessingService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -32,8 +33,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 			IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
 		};
 	});
+builder.Services.AddScoped<S3Service>();
+builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+builder.Services.AddAWSService<IAmazonS3>();
 
-
+builder.Services.AddScoped<ImageService>();
 builder.Services.AddScoped<UserServices>();
 
 var app = builder.Build();
