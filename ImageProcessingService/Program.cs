@@ -1,4 +1,5 @@
 using Amazon.S3;
+using AspNetCoreRateLimit;
 using ImageProcessingService.DataAccess;
 using ImageProcessingService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -40,6 +41,21 @@ builder.Services.AddAWSService<IAmazonS3>();
 builder.Services.AddScoped<ImageService>();
 builder.Services.AddScoped<UserServices>();
 
+// Rate limiting
+builder.Services.AddOptions();
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.Configure<IpRateLimitPolicies>(builder.Configuration.GetSection("IpRateLimitPolicies"));
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+	options.Configuration = builder.Configuration["Redis:ConnectionString"];
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -52,6 +68,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+
+app.UseIpRateLimiting();
 
 app.MapControllers();
 
